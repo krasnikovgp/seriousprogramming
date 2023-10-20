@@ -1,7 +1,7 @@
 class Student:
-    '''
+    """
     Класс для представления силы человека.
-    '''
+    """
 
     def __init__(self, name, power, age, sex='М'):
         self.name = name
@@ -31,12 +31,13 @@ class Student:
             print('Привет, шкет!')
 
 
-human1 = Student('Гоша', 8, 16)
-human2 = Student('Никита', 5, 16)
-human3 = Student('Марь Ивановна', -10, 99)
-human4 = Student('Глеб', 3, 11)
+if __name__ == '__main__':
+    human1 = Student('Гоша', 8, 16)
+    human2 = Student('Никита', 5, 16)
+    human3 = Student('Марь Ивановна', -10, 99, 'Ж')
+    human4 = Student('Глеб', 3, 11)
 
-human1.greeting(human3)
-human1.fight(human3)
-human1.greeting(human4)
-human1.fight(human2)
+    human1.greeting(human3)
+    human1.fight(human3)
+    human1.greeting(human2)
+    human1.fight(human2)
