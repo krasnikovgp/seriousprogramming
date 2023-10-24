@@ -13,15 +13,15 @@ logger = logging.getLogger(__name__)
 
 def main():
     updater = Updater(token=TOKEN)  # Вытягиваем обновления из тг
-    dispatcher: Dispatcher = updater.dispatcher  # Распределяем обновы по обработчикам
+    dp = updater.dispatcher
 
-    updater.dispatcher.add_handler(CommandHandler('help', do_help))
-    updater.dispatcher.add_handler(CommandHandler('start', do_start))
-    updater.dispatcher.add_handler(CommandHandler('menu', do_menu))
-    updater.dispatcher.add_handler(CommandHandler('menu2', do_inline_keyboard))
-    updater.dispatcher.add_handler(CommandHandler('getcat', get_cat))
-    updater.dispatcher.add_handler(MessageHandler(Filters.command, unknown))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, do_echo))
+    dp.add_handler(CommandHandler('help', do_help))
+    dp.add_handler(CommandHandler('start', do_start))
+    dp.add_handler(CommandHandler('menu', do_menu))
+    dp.add_handler(CommandHandler('menu2', do_inline_keyboard))
+    dp.add_handler(CommandHandler('getcat', get_cat))
+    dp.add_handler(MessageHandler(Filters.command, unknown))
+    dp.add_handler(MessageHandler(Filters.text, do_echo))
 
     updater.start_polling()
     logger.info(updater.bot.getMe())
