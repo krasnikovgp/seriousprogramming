@@ -20,7 +20,7 @@ def main():
     dp.add_handler(CommandHandler('menu', do_menu))
     dp.add_handler(CommandHandler('menu2', do_inline_keyboard))
     dp.add_handler(CommandHandler('getcat', get_cat))
-    '''dp.add_handler(CallbackQueryHandler(keyboard_react))'''
+    dp.add_handler(CallbackQueryHandler(keyboard_react))
     dp.add_handler(MessageHandler(Filters.command, unknown))
     dp.add_handler(MessageHandler(Filters.text, do_echo))
 
@@ -108,14 +108,14 @@ def do_inline_keyboard(update, context):
     )
 
 
-'''def keyboard_react(update, context):
+def keyboard_react(update, context):
     query = update.callback_query
     user_id = update.effective_user.id
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
-    text = ''
+    text = query.data
     query.message.reply_text(
         text,
-        reply_markup=ReplyKeyboardRemove())'''
+        reply_markup=ReplyKeyboardRemove())
 
 
 ERROR_MESSAGE = 'Ошибка при запросе к основному API: {error}'
