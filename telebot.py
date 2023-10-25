@@ -1,4 +1,4 @@
-from telegram import ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import *
 import logging
 from key import TOKEN
@@ -20,6 +20,7 @@ def main():
     dp.add_handler(CommandHandler('menu', do_menu))
     dp.add_handler(CommandHandler('menu2', do_inline_keyboard))
     dp.add_handler(CommandHandler('getcat', get_cat))
+    '''dp.add_handler(CallbackQueryHandler(keyboard_react))'''
     dp.add_handler(MessageHandler(Filters.command, unknown))
     dp.add_handler(MessageHandler(Filters.text, do_echo))
 
@@ -49,12 +50,13 @@ def do_start(update, context):
     user_fullname = update.message.from_user.full_name
     logger.info(f'{user_id} вызвал функцию do_start')
     text = [
-        f'Здарова, {user_fullname}!',
-        f'У меня теперь есть твой {user_id=}',
-        'Напиши /menu, чтобы узнать, что я умею :)'
+        f'<i>Здравствуй, {user_fullname}!</i>',
+        f'<i>У меня теперь есть твой <b>юзерайди</b></i> = <code>{user_id}</code>',
+        f'',
+        '<i>Напиши /menu, чтобы узнать, что <b>я умею</b></i> :)'
     ]
     text = '\n'.join(text)
-    update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
 
 
 def do_menu(update, context):
@@ -74,12 +76,14 @@ def do_help(update, context):
     user_id = update.message.from_user.id
     logger.info(f'{user_id=} вызвал команду do_help')
     text = [
-        f'У меня есть разные команды:',
-        f'/menu, /getcat (остальное в разработке)',
-        f'Также у меня есть функция ECHO'
+        f'<i>У меня есть разные <b>команды</b></i>:',
+        f'/menu',
+        f'/getcat',
+        f'<code>(остальное в разработке)</code>',
+        f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
-    update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
 
 
 def unknown(update, context):
@@ -102,6 +106,16 @@ def do_inline_keyboard(update, context):
         text,
         reply_markup=keyboard
     )
+
+
+'''def keyboard_react(update, context):
+    query = update.callback_query
+    user_id = update.effective_user.id
+    logger.info(f'{user_id=} вызвал функцию keyboard_react')
+    text = ''
+    query.message.reply_text(
+        text,
+        reply_markup=ReplyKeyboardRemove())'''
 
 
 ERROR_MESSAGE = 'Ошибка при запросе к основному API: {error}'
@@ -130,7 +144,7 @@ def get_cat(update, context):
         username=update.message.chat.username,
         name=update.message.chat.first_name
     ))
-    context.bot.send_photo(chat.id, get_new_image())
+    context.bot.send_photo(chat.id, get_new_image(), reply_markup=ReplyKeyboardRemove())
 
 
 if __name__ == '__main__':
