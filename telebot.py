@@ -19,7 +19,7 @@ def main():
     dp.add_handler(CommandHandler('help', do_help))
     dp.add_handler(CommandHandler('start', do_start))
     dp.add_handler(CommandHandler('menu', do_menu))
-    dp.add_handler(CommandHandler('menu2', do_inline_keyboard))
+    dp.add_handler(CommandHandler('promenu', do_inline_keyboard))
     dp.add_handler(CommandHandler('getcat', get_cat))
     dp.add_handler(CommandHandler('set', set_timer))
     dp.add_handler(CommandHandler('stop', delete_timer))
@@ -56,7 +56,7 @@ def do_start(update, context):
         f'<i>Здравствуй, {user_fullname}!</i>',
         f'<i>У меня теперь есть твой <b>юзерайди</b></i> = <code>{user_id}</code>',
         f'',
-        '<i>Напиши /menu, чтобы узнать, что <b>я умею</b></i> :)'
+        '<i>Напиши /help, чтобы узнать, что <b>я умею</b></i> :)'
     ]
     text = '\n'.join(text)
     update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
@@ -67,8 +67,8 @@ def do_menu(update, context):
     logger.info(f'{user_id=} вызвал меню')
     buttons = [
         ['/help', '/getcat'],
-        ['weather in Moscow'],
-        ['real time in USA']
+        ['/set'], ['/promenu'],
+        ['weather in Moscow']
     ]
     text = 'Выберите кнопку :)'
     keyboard = ReplyKeyboardMarkup(buttons)
@@ -79,10 +79,8 @@ def do_help(update, context):
     user_id = update.message.from_user.id
     logger.info(f'{user_id=} вызвал команду do_help')
     text = [
-        f'<i>У меня есть разные <b>команды</b></i>:',
-        f'/menu',
-        f'/getcat',
-        f'<code>(остальное в разработке)</code>',
+        f'<i>У меня есть разные <b>команды</b>, с которыми '
+        f'ты можешь ознакомиться в /menu или /promenu</i>:',
         f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
@@ -99,8 +97,8 @@ def do_inline_keyboard(update, context):
     logger.info(f"{user_id=} Bызвaл функцию do_inline_keyboard")
     buttons = [
         ['/help', '/getcat'],
-        ['weather in Moscow'],
-        ['real time in USA']
+        ['/set'], ['/menu'],
+        ['weather in Moscow']
     ]
     keyboard_button = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
     keyboard = InlineKeyboardMarkup(keyboard_button)
@@ -117,6 +115,9 @@ def keyboard_react(update, context):
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
     if query.data == '/getcat':
         get_cat(update, context)
+    elif query.data == '/set':
+        set_timer(update, context)
+
     query.message.reply_text(
         reply_markup=ReplyKeyboardRemove())
 
