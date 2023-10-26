@@ -1,8 +1,9 @@
-from telegram import ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
+from telegram import *
 from telegram.ext import *
 import logging
 from key import TOKEN
 import requests
+import datetime
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,6 +21,8 @@ def main():
     dp.add_handler(CommandHandler('menu', do_menu))
     dp.add_handler(CommandHandler('menu2', do_inline_keyboard))
     dp.add_handler(CommandHandler('getcat', get_cat))
+    dp.add_handler(CommandHandler('set', set_timer))
+    dp.add_handler(CommandHandler('stop', delete_timer))
     dp.add_handler(CallbackQueryHandler(keyboard_react))
     dp.add_handler(MessageHandler(Filters.command, unknown))
     dp.add_handler(MessageHandler(Filters.text, do_echo))
@@ -112,10 +115,35 @@ def keyboard_react(update, context):
     query = update.callback_query
     user_id = update.effective_user.id
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
-    text = query.data
+    if query.data == '/getcat':
+        get_cat(update, context)
     query.message.reply_text(
-        text,
         reply_markup=ReplyKeyboardRemove())
+
+
+def set_timer(update, context):
+    logger.info(f'Выполнена функция {set_timer}')
+    user_id = update.effective_user.id
+    context.bot_data["user_id"] = user_id
+    context.bot_data["timer"] = datetime.datetime.now()
+    context.bot_data['timer_job'] = context.job_queue.run_repeating(show_seconds, 1)
+    context.bot.send_message(user_id, 'Таймер запущен! \n'
+                                      'Нажмите /stop, чтобы остановить таймер :)')
+
+
+def show_seconds(context):
+    user_id = context.bot_data["user_id"]
+    timer = datetime.datetime.now() - context.bot_data['timer']
+    timer = timer.seconds
+    text = f'Прошло {timer} секунд'
+    context.bot.send_message(user_id, text)
+
+
+def delete_timer(update: Update, context: CallbackContext):
+    logger.info(f'Выполнена функция {delete_timer}')
+    timer = context.bot_data["timer"]
+    context.bot_data['timer_job'].schedule_removal()
+    update.message.reply_text(f'Таймер отстановлен, прошло {timer} секунд.')
 
 
 ERROR_MESSAGE = 'Ошибка при запросе к основному API: {error}'
