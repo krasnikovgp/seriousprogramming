@@ -96,11 +96,11 @@ def unknown(update, context):
                              text="Друг, у меня такого нет :(", reply_markup=ReplyKeyboardRemove())
 
 
-'''def do_inline_keyboard(update, context):
+def do_inline_keyboard(update, context):
     user_id = update.message.from_user.id
     logger.info(f"{user_id=} Bызвaл функцию do_inline_keyboard")
     buttons = [
-        ['/help', '/getcat'],
+        ['/ilhelp', '/ilgetcat'],
         ['weather in Moscow'],
         ['/set', '/stop']
     ]
@@ -117,24 +117,40 @@ def keyboard_react(update, context):
     query = update.callback_query
     user_id = update.effective_user.id
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
-    if query.data == '/getcat':
+    if query.data == '/ilgetcat':
         get_cat(update, context)
-    if query.data == '/help':
+    if query.data == '/ilhelp':
         do_help(update, context)
     text = 'Отправь пустое сообщение :)'
     context.bot.send_message(
         text,
         chat_id=user_id,
-        reply_markup=ReplyKeyboardRemove())'''
+        reply_markup=ReplyKeyboardRemove())
 
 
-def do_inline_keyboard(update: Update, context: CallbackContext):
+def do_il_help(update, context):
+    query = update.callback_query
+    user_id = update.effective_user.id
+    logger.info(f'{user_id=} вызвал команду do_help')
+    text = [
+        f'<i>У меня есть разные <b>команды</b></i>:',
+        f'/menu',
+        f'/getcat',
+        f'/secret',
+        f'<code>(остальное в разработке)</code>',
+        f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
+    ]
+    text = '\n'.join(text)
+    update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
+
+
+'''def do_inline_keyboard(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     logger.info(f'{user_id=} вызвал функцию do_inline_keyboard')
     buttons = [
         ['Раз', 'Два'],
         ['Три', 'Четыре'],
-        ['Время в США']
+        ['ПЯТЬ']
     ]
     keyboard_buttons = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
     keyboard = InlineKeyboardMarkup(keyboard_buttons)
@@ -152,7 +168,7 @@ def keyboard_react(update: Update, context: CallbackContext):
     buttons = [
         ['Раз', 'Два'],
         ['Три', 'Четыре'],
-        ['Время в США']
+        ['ПЯТЬ']
     ]
     for row in buttons:
         if query.data in row:
@@ -163,7 +179,7 @@ def keyboard_react(update: Update, context: CallbackContext):
     query.edit_message_text(
         text,
         reply_markup=keyboard
-    )
+    )'''
 
 
 def set_timer(update, context):
