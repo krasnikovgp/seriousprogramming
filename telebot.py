@@ -19,7 +19,7 @@ def main():
     dp.add_handler(CommandHandler('help', do_help))
     dp.add_handler(CommandHandler('start', do_start))
     dp.add_handler(CommandHandler('menu', do_menu))
-    dp.add_handler(CommandHandler('promenu', do_inline_keyboard))
+    dp.add_handler(CommandHandler('secret', do_inline_keyboard))
     dp.add_handler(CommandHandler('getcat', get_cat))
     dp.add_handler(CommandHandler('set', set_timer))
     dp.add_handler(CommandHandler('stop', delete_timer))
@@ -56,7 +56,7 @@ def do_start(update, context):
         f'<i>Здравствуй, {user_fullname}!</i>',
         f'<i>У меня теперь есть твой <b>юзерайди</b></i> = <code>{user_id}</code>',
         f'',
-        '<i>Напиши /help, чтобы узнать, что <b>я умею</b></i> :)'
+        '<i>Напиши /menu, чтобы узнать, что <b>я умею</b></i> :)'
     ]
     text = '\n'.join(text)
     update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
@@ -67,8 +67,9 @@ def do_menu(update, context):
     logger.info(f'{user_id=} вызвал меню')
     buttons = [
         ['/help', '/getcat'],
-        ['/set'], ['/promenu'],
-        ['weather in Moscow']
+        ['weather in Moscow'],
+        ['/set', '/stop'],
+        ['/secret']
     ]
     text = 'Выберите кнопку :)'
     keyboard = ReplyKeyboardMarkup(buttons)
@@ -79,8 +80,11 @@ def do_help(update, context):
     user_id = update.message.from_user.id
     logger.info(f'{user_id=} вызвал команду do_help')
     text = [
-        f'<i>У меня есть разные <b>команды</b>, с которыми '
-        f'ты можешь ознакомиться в /menu или /promenu</i>:',
+        f'<i>У меня есть разные <b>команды</b></i>:',
+        f'/menu',
+        f'/getcat',
+        f'/secret',
+        f'<code>(остальное в разработке)</code>',
         f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
@@ -92,13 +96,13 @@ def unknown(update, context):
                              text="Друг, у меня такого нет :(", reply_markup=ReplyKeyboardRemove())
 
 
-def do_inline_keyboard(update, context):
+'''def do_inline_keyboard(update, context):
     user_id = update.message.from_user.id
     logger.info(f"{user_id=} Bызвaл функцию do_inline_keyboard")
     buttons = [
         ['/help', '/getcat'],
-        ['/set'], ['/menu'],
-        ['weather in Moscow']
+        ['weather in Moscow'],
+        ['/set', '/stop']
     ]
     keyboard_button = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
     keyboard = InlineKeyboardMarkup(keyboard_button)
@@ -115,11 +119,51 @@ def keyboard_react(update, context):
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
     if query.data == '/getcat':
         get_cat(update, context)
-    elif query.data == '/set':
-        set_timer(update, context)
+    if query.data == '/help':
+        do_help(update, context)
+    text = 'Отправь пустое сообщение :)'
+    context.bot.send_message(
+        text,
+        chat_id=user_id,
+        reply_markup=ReplyKeyboardRemove())'''
 
-    query.message.reply_text(
-        reply_markup=ReplyKeyboardRemove())
+
+def do_inline_keyboard(update: Update, context: CallbackContext):
+    user_id = update.message.from_user.id
+    logger.info(f'{user_id=} вызвал функцию do_inline_keyboard')
+    buttons = [
+        ['Раз', 'Два'],
+        ['Три', 'Четыре'],
+        ['Время в США']
+    ]
+    keyboard_buttons = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
+    keyboard = InlineKeyboardMarkup(keyboard_buttons)
+    text = 'Выбери одну из фигни на клавиатуре'
+    update.message.reply_text(
+        text,
+        reply_markup=keyboard
+    )
+
+
+def keyboard_react(update: Update, context: CallbackContext):
+    query = update.callback_query
+    user_id = update.effective_user.id
+    logger.info(f'{user_id=} вызвал функцию keyboard_react')
+    buttons = [
+        ['Раз', 'Два'],
+        ['Три', 'Четыре'],
+        ['Время в США']
+    ]
+    for row in buttons:
+        if query.data in row:
+            row.pop(row.index(query.data))
+    keyboard_buttons = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
+    keyboard = InlineKeyboardMarkup(keyboard_buttons)
+    text = 'Выбери другую фигню на клавиатуре'
+    query.edit_message_text(
+        text,
+        reply_markup=keyboard
+    )
 
 
 def set_timer(update, context):
@@ -133,18 +177,23 @@ def set_timer(update, context):
 
 
 def show_seconds(context):
+    message_id = context.bot_data.get('message_id', None)
     user_id = context.bot_data["user_id"]
     timer = datetime.datetime.now() - context.bot_data['timer']
     timer = timer.seconds
-    text = f'Прошло {timer} секунд'
-    context.bot.send_message(user_id, text)
+    text = f'Прошло {timer} секунд, чтобы его остановить нажми /stop'
+    if not message_id:
+        message = context.bot.send_message(user_id, text)
+        context.bot_data['message_id'] = message.message_id
+    else:
+        context.bot.edit_message_text(text, chat_id=user_id, message_id=message_id)
 
 
 def delete_timer(update: Update, context: CallbackContext):
     logger.info(f'Выполнена функция {delete_timer}')
-    timer = context.bot_data["timer"]
     context.bot_data['timer_job'].schedule_removal()
-    update.message.reply_text(f'Таймер отстановлен, прошло {timer} секунд.')
+    update.message.reply_text(f'Таймер отстановлен, включи его заново командой /set',
+                              reply_markup=ReplyKeyboardRemove())
 
 
 ERROR_MESSAGE = 'Ошибка при запросе к основному API: {error}'
