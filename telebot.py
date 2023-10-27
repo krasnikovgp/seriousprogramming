@@ -23,6 +23,7 @@ def main():
     dp.add_handler(CommandHandler('getcat', get_cat))
     dp.add_handler(CommandHandler('set_timer', set_timer))
     dp.add_handler(CommandHandler('stop_timer', delete_timer))
+    dp.add_handler(CommandHandler('getdog', get_dog))
     dp.add_handler(CallbackQueryHandler(keyboard_react))
     dp.add_handler(MessageHandler(Filters.command, unknown))
     dp.add_handler(MessageHandler(Filters.text, do_echo))
@@ -76,9 +77,9 @@ def do_menu(update, context):
     update.message.reply_text(text, reply_markup=keyboard)
 
 
-def do_help(update, context):
-    # user_id = update.message.from_user.id
-    # logger.info(f'{user_id=} вызвал команду do_help')
+def do_help(update: Update, context: CallbackContext):
+    user_id = update.effective_chat.id
+    logger.info(f'{user_id=} вызвал команду do_help')
     text = [
         f'<i>У меня есть разные <b>команды</b></i>:',
         f'/menu',
@@ -87,7 +88,7 @@ def do_help(update, context):
         f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
-    update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
+    context.bot.send_message(update.effective_chat.id, text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
 
 
 def unknown(update, context):
@@ -100,8 +101,8 @@ def do_inline_keyboard(update, context):
     user_id = update.message.from_user.id
     logger.info(f"{user_id=} Bызвaл функцию do_inline_keyboard")
     buttons = [
-        ['getcat'],
-        ['weather in Moscow'],
+        ['getcat', 'getdog'],
+        ['help'],
         ['set_timer', 'stop_timer']
     ]
     keyboard_button = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
@@ -119,12 +120,14 @@ def keyboard_react(update: Update, context: CallbackContext):
     logger.info(f'{user_id=} вызвал функцию keyboard_react')
     if query.data == 'getcat':
         get_cat(update, context)
-    # if query.data == 'getdog':
-    #     get_dog(update, context)
+    if query.data == 'getdog':
+        get_dog(update, context)
     if query.data == 'set_timer':
         set_timer(update, context)
     if query.data == 'stop_timer':
         delete_timer(update, context)
+    if query.data == 'help':
+        do_help(update, context)
 
 
 def set_timer(update, context):
@@ -190,6 +193,29 @@ def get_cat(update, context):
         name=chat.first_name
     ))
     context.bot.send_photo(chat.id, get_new_image(), reply_markup=ReplyKeyboardRemove())
+
+
+def get_new_image2():
+    try:
+        response = requests.get(DOGS_URL)
+    except Exception as error:
+        logging.error(ERROR_MESSAGE.format(error=error))
+        new_url = URL
+        response = requests.get(new_url)
+
+    response = response.json()
+    random_dog = response[0].get('url')
+    return random_dog
+
+
+def get_dog(update, context):
+    chat = update.effective_chat
+    logging.info(RESPONSE_USERNAME.format(
+        image_name='пес',
+        username=chat.username,
+        name=chat.first_name
+    ))
+    context.bot.send_photo(chat.id, get_new_image2(), reply_markup=ReplyKeyboardRemove())
 
 
 if __name__ == '__main__':
