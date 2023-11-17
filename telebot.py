@@ -4,6 +4,7 @@ import logging
 from key import TOKEN
 import requests
 import datetime
+from fsm import register_handler
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,6 +25,7 @@ def main():
     dp.add_handler(CommandHandler('set_timer', set_timer))
     dp.add_handler(CommandHandler('stop_timer', delete_timer))
     dp.add_handler(CommandHandler('getdog', get_dog))
+    dp.add_handler(register_handler)
     dp.add_handler(CallbackQueryHandler(keyboard_react))
     dp.add_handler(MessageHandler(Filters.command, unknown))
     dp.add_handler(MessageHandler(Filters.text, do_echo))
@@ -57,7 +59,7 @@ def do_start(update, context):
         f'<i>Здравствуй, {user_fullname}!</i>',
         f'<i>У меня теперь есть твой <b>юзерайди</b></i> = <code>{user_id}</code>',
         f'',
-        '<i>Напиши /menu, чтобы узнать, что <b>я умею</b></i> :)'
+        '<i>Напиши /help, чтобы узнать, что <b>я умею</b></i> :)'
     ]
     text = '\n'.join(text)
     update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
@@ -70,7 +72,7 @@ def do_menu(update, context):
         ['/help', '/getcat'],
         ['weather in Moscow'],
         ['/set_timer', '/stop_timer'],
-        ['/ikmenu']
+        ['/ikmenu', '/register']
     ]
     text = 'Выберите кнопку :)'
     keyboard = ReplyKeyboardMarkup(buttons)
@@ -82,9 +84,10 @@ def do_help(update: Update, context: CallbackContext):
     logger.info(f'{user_id=} вызвал команду do_help')
     text = [
         f'<i>У меня есть разные <b>команды</b></i>:',
-        f'/menu',
-        f'/getcat',
-        f'/ikmenu',
+        f'/menu - дефолт менюшка с командами',
+        f'/getcat - рандом котик',
+        f'/ikmenu - инлайн клавиатура',
+        f'/register - регает тебя в бд',
         f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
@@ -102,7 +105,6 @@ def do_inline_keyboard(update, context):
     logger.info(f"{user_id=} Bызвaл функцию do_inline_keyboard")
     buttons = [
         ['getcat', 'getdog'],
-        ['help'],
         ['set_timer', 'stop_timer']
     ]
     keyboard_button = [[InlineKeyboardButton(text=text, callback_data=text) for text in row] for row in buttons]
@@ -126,8 +128,6 @@ def keyboard_react(update: Update, context: CallbackContext):
         set_timer(update, context)
     if query.data == 'stop_timer':
         delete_timer(update, context)
-    if query.data == 'help':
-        do_help(update, context)
 
 
 def set_timer(update, context):
