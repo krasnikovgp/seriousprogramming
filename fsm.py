@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler
 
 import logging
@@ -13,24 +13,24 @@ def ask_name(update: Update, context: CallbackContext):
     logger.info(f'{username=} Вызвал функцию ask_name')
     text = 'Напиши свое имя :'
 
-    update.message.reply_text(text)
+    update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
 
     return WAIT_NAME
 
 
 def get_name(update: Update, context: CallbackContext):
     text = update.message.text
-
+    context.user_data['name'] = text
     answer = f'Твое имя - {text}'
     update.message.reply_text(answer)
 
-    return ask_surname
+    return ask_surname(update, context)
 
 
 def ask_surname(update: Update, context: CallbackContext):
     username = update.message.from_user.username
     logger.info(f'{username=} Вызвал функцию ask_surname')
-    text = 'Напиши свое имя :'
+    text = 'Напиши свою фамилию :'
 
     update.message.reply_text(text)
 
@@ -39,11 +39,11 @@ def ask_surname(update: Update, context: CallbackContext):
 
 def get_surname(update: Update, context: CallbackContext):
     text = update.message.text
-
+    context.user_data['surname'] = text
     answer = f'Твоя фамилия - {text}'
     update.message.reply_text(answer)
 
-    return ask_bd
+    return ask_bd(update, context)
 
 
 def ask_bd(update: Update, context: CallbackContext):
@@ -57,19 +57,26 @@ def ask_bd(update: Update, context: CallbackContext):
 
 
 def get_bd(update: Update, context: CallbackContext):
-    text = update.message.text
-
+    text = context.user_data['bd']
     answer = f'Твоя дата рождения - {text}'
     update.message.reply_text(answer)
 
-    return register
+    return register(update, context)
 
 
 def register(update: Update, context: CallbackContext):
     username = update.message.from_user.username
     logger.info(f'{username} вызвал команду register')
-    answer = 'Зареган!'
-    update.message.reply_text(answer)
+    name = context.user_data['name']
+    surname = context.user_data['surname']
+    answer = [
+        'Зареган!',
+        'Твои данные:',
+        f'{name=}', f'{surname=}', f'birthday={update.message.reply_text}'
+    ]
+    answer1 = '\n'.join(answer)
+
+    update.message.reply_text(answer1)
 
     return ConversationHandler.END
 
