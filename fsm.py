@@ -1,5 +1,6 @@
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler
+from db import write_to_db
 
 import logging
 
@@ -57,7 +58,8 @@ def ask_bd(update: Update, context: CallbackContext):
 
 
 def get_bd(update: Update, context: CallbackContext):
-    text = context.user_data['bd']
+    text = update.message.text
+    context.user_data['bd'] = text
     answer = f'Твоя дата рождения - {text}'
     update.message.reply_text(answer)
 
@@ -66,13 +68,16 @@ def get_bd(update: Update, context: CallbackContext):
 
 def register(update: Update, context: CallbackContext):
     username = update.message.from_user.username
+    user_id = update.effective_user.id
     logger.info(f'{username} вызвал команду register')
     name = context.user_data['name']
     surname = context.user_data['surname']
+    birthday = context.user_data['bd']
+    write_to_db(user_id, name, surname, birthday)
     answer = [
         'Зареган!',
         'Твои данные:',
-        f'{name=}', f'{surname=}', f'birthday={update.message.reply_text}'
+        f'{name=}', f'{surname=}', f'{birthday=}'
     ]
     answer1 = '\n'.join(answer)
 
