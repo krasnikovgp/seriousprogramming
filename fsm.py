@@ -1,12 +1,35 @@
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler
-from db import write_to_db
+from db import write_to_db, find_user_by_id
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-WAIT_NAME, WAIT_SURNAME, WAIT_BD = range(3)
+WAIT_NAME, WAIT_SURNAME, WAIT_BD, WAIT_OK = range(3)
+
+
+def check_register(update: Update, context: CallbackContext):
+    username = update.message.from_user.username
+    user_id = update.message.from_user.id
+    logger.info(f'{username=} Вызвал функцию check_reg')
+    user = find_user_by_id(user_id)
+    if not user:
+        return ask_name(update, context)
+
+    answer = [
+        'Привет! Ты уже зарегистрирован со следующими данными : ',
+        f'Имя : {user[1]}',
+        f'Фамилия : {user[2]}',
+        f'Дата Рождения : {user[3]}'
+    ]
+    answer = '\n'.join(answer)
+    update.message.reply_text(answer, reply_markup=ReplyKeyboardRemove())
+
+
+def get_yes_no(update: Update, context: CallbackContext):
+    username = update.message.from_user.username
+    logger.info(f'{username=} Вызвал функцию ask_yes_no')
 
 
 def ask_name(update: Update, context: CallbackContext):
@@ -70,9 +93,11 @@ def register(update: Update, context: CallbackContext):
     username = update.message.from_user.username
     user_id = update.effective_user.id
     logger.info(f'{username} вызвал команду register')
+
     name = context.user_data['name']
     surname = context.user_data['surname']
     birthday = context.user_data['bd']
+
     write_to_db(user_id, name, surname, birthday)
     answer = [
         'Зареган!',
@@ -82,7 +107,6 @@ def register(update: Update, context: CallbackContext):
     answer1 = '\n'.join(answer)
 
     update.message.reply_text(answer1)
-
     return ConversationHandler.END
 
 
