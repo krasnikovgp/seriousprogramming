@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler
 from db import write_to_db, find_user_by_id
 
@@ -26,10 +26,20 @@ def check_register(update: Update, context: CallbackContext):
     answer = '\n'.join(answer)
     update.message.reply_text(answer, reply_markup=ReplyKeyboardRemove())
 
+    buttons = [InlineKeyboardButton(text='Да', callback_data='Да'),
+               InlineKeyboardButton(text='Нет', callback_data='Нет')]
+    keyboard = InlineKeyboardMarkup.from_row(buttons)
+    update.message.reply_text(text='Вы хотите повторно зарегистрироваться?', reply_markup=keyboard)
+    return WAIT_OK
+
 
 def get_yes_no(update: Update, context: CallbackContext):
     username = update.message.from_user.username
-    logger.info(f'{username=} Вызвал функцию ask_yes_no')
+    logger.info(f'{username=} вызвал функцию get_yes_no')
+    query = update.callback_query
+    if query.data == 'Да':
+        return ask_name(update, context)
+    return ConversationHandler.END
 
 
 def ask_name(update: Update, context: CallbackContext):
@@ -111,11 +121,12 @@ def register(update: Update, context: CallbackContext):
 
 
 register_handler = ConversationHandler(
-    entry_points=[CommandHandler('register', ask_name)],
+    entry_points=[CommandHandler('register', check_register)],
     states={
         WAIT_NAME: [MessageHandler(Filters.text, get_name)],
         WAIT_SURNAME: [MessageHandler(Filters.text, get_surname)],
-        WAIT_BD: [MessageHandler(Filters.text, get_bd)]
+        WAIT_BD: [MessageHandler(Filters.text, get_bd)],
+        WAIT_OK: [MessageHandler(Filters.text, get_yes_no)]
     },
     fallbacks=[]
 )
