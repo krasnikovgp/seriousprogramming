@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-WAIT_NAME, WAIT_SURNAME, WAIT_BD, WAIT_OK = range(3)
+WAIT_NAME, WAIT_SURNAME, WAIT_BD, WAIT_OK = range(4)
 
 
 def check_register(update: Update, context: CallbackContext):
@@ -102,7 +102,7 @@ def register(update: Update, context: CallbackContext):
     answer = [
         'Зареган!',
         'Твои данные:',
-        f'{name=}', f'{surname=}', f'{birthday=}'
+        f'Имя : {name}', f'Фамилия : {surname}', f'Дата Рождения : {birthday}'
     ]
     answer1 = '\n'.join(answer)
 
