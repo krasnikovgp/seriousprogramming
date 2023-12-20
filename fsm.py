@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-WAIT_NAME, WAIT_SURNAME, WAIT_BD, WAIT_OK = range(4)
+WAIT_NAME, WAIT_SURNAME, WAIT_PN, WAIT_BD, WAIT_OK = range(5)
 
 
 def check_register(update: Update, context: CallbackContext):
@@ -21,7 +21,8 @@ def check_register(update: Update, context: CallbackContext):
         'Привет! Ты уже зарегистрирован со следующими данными : ',
         f'Имя : {user[1]}',
         f'Фамилия : {user[2]}',
-        f'Дата Рождения : {user[3]}'
+        f'Имя питомца : {user[3]}',
+        f'Дата рождения : {user[4]}'
     ]
     answer = '\n'.join(answer)
     update.message.reply_text(answer, reply_markup=ReplyKeyboardRemove())
@@ -77,6 +78,25 @@ def get_surname(update: Update, context: CallbackContext):
     answer = f'Твоя фамилия - {text}'
     update.message.reply_text(answer)
 
+    return ask_petname(update, context)
+
+
+def ask_petname(update: Update, context: CallbackContext):
+    username = update.message.from_user.username
+    logger.info(f'{username=} Вызвал функцию ask_petname')
+    text = 'Напиши имя своего домашнего питомца :'
+
+    update.message.reply_text(text)
+
+    return WAIT_PN
+
+
+def get_petname(update: Update, context: CallbackContext):
+    text = update.message.text
+    context.user_data['petname'] = text
+    answer = f'Имя твоего домашнего питомца - {text}'
+    update.message.reply_text(answer)
+
     return ask_bd(update, context)
 
 
@@ -106,13 +126,14 @@ def register(update: Update, context: CallbackContext):
 
     name = context.user_data['name']
     surname = context.user_data['surname']
+    petname = context.user_data['petname']
     birthday = context.user_data['bd']
 
-    write_to_db(user_id, name, surname, birthday)
+    write_to_db(user_id, name, surname, petname, birthday)
     answer = [
         'Зареган!',
         'Твои данные:',
-        f'Имя : {name}', f'Фамилия : {surname}', f'Дата Рождения : {birthday}'
+        f'Имя : {name}', f'Фамилия : {surname}', f'Питомец : {petname}', f'Дата Рождения : {birthday}'
     ]
     answer1 = '\n'.join(answer)
 
@@ -125,6 +146,7 @@ register_handler = ConversationHandler(
     states={
         WAIT_NAME: [MessageHandler(Filters.text, get_name)],
         WAIT_SURNAME: [MessageHandler(Filters.text, get_surname)],
+        WAIT_PN: [MessageHandler(Filters.text, get_petname)],
         WAIT_BD: [MessageHandler(Filters.text, get_bd)],
         WAIT_OK: [MessageHandler(Filters.text, get_yes_no)]
     },
