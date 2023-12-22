@@ -70,7 +70,6 @@ def do_menu(update, context):
     logger.info(f'{user_id=} вызвал меню')
     buttons = [
         ['/help', '/getcat'],
-        ['weather in Moscow'],
         ['/set_timer', '/stop_timer'],
         ['/ikmenu', '/register']
     ]
@@ -88,10 +87,12 @@ def do_help(update: Update, context: CallbackContext):
         f'/getcat - рандом котик',
         f'/ikmenu - инлайн клавиатура',
         f'/register - регает тебя в бд',
+        f'/set_timer - запускает таймер',
         f'<i>Также у меня есть функция</i>  <code>ECHO</code>'
     ]
     text = '\n'.join(text)
-    context.bot.send_message(update.effective_chat.id, text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove())
+    context.bot.send_message(update.effective_chat.id, text, parse_mode=ParseMode.HTML,
+                             reply_markup=ReplyKeyboardRemove())
 
 
 def unknown(update, context):
