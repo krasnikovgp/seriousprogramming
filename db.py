@@ -24,4 +24,3 @@ def find_user_by_id(userid):
             user_data = line.strip().split('\t')
             if user_data[0] == str(userid):
                 return user_data
-

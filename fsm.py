@@ -1,5 +1,7 @@
 from telegram import Update, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler
+from telegram.ext import CallbackContext, Filters, ConversationHandler, MessageHandler, CommandHandler, \
+    CallbackQueryHandler
+
 from db import write_to_db, find_user_by_id
 
 import logging
@@ -35,7 +37,7 @@ def check_register(update: Update, context: CallbackContext):
 
 
 def get_yes_no(update: Update, context: CallbackContext):
-    username = update.message.from_user.username
+    username = update.effective_chat.username
     logger.info(f'{username=} вызвал функцию get_yes_no')
     query = update.callback_query
     if query.data == 'Да':
@@ -44,11 +46,11 @@ def get_yes_no(update: Update, context: CallbackContext):
 
 
 def ask_name(update: Update, context: CallbackContext):
-    username = update.message.from_user.username
+    username = update.effective_chat.username
     logger.info(f'{username=} Вызвал функцию ask_name')
     text = 'Напиши свое имя :'
 
-    update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
+    context.bot.send_message(update.effective_chat.id, text, reply_markup=ReplyKeyboardRemove())
 
     return WAIT_NAME
 
@@ -148,7 +150,7 @@ register_handler = ConversationHandler(
         WAIT_SURNAME: [MessageHandler(Filters.text, get_surname)],
         WAIT_PN: [MessageHandler(Filters.text, get_petname)],
         WAIT_BD: [MessageHandler(Filters.text, get_bd)],
-        WAIT_OK: [MessageHandler(Filters.text, get_yes_no)]
+        WAIT_OK: [CallbackQueryHandler(get_yes_no)]
     },
     fallbacks=[]
 )
